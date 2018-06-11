@@ -4,7 +4,7 @@
   "main": "graph.js",
   "scripts": {
     "test": "mocha test/index.js",
-    "start": "browserify viz/main.js -o bundle.js -v && http-server",
+    "start": "browserify viz/main.js -o bundle.js -v && http-server viz",
     "dev": "watchify viz/main.js -o viz/bundle.js "
   },
   "author": "",
