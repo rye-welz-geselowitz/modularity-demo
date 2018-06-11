@@ -4,11 +4,6 @@ body{
 .link{
     stroke: gray;
 }
-
-.label{
-    font-size: 10px;
-    color: black;
-}
 .c0{
     fill: pink;
 }

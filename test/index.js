@@ -191,113 +191,120 @@ describe('Graph data structure', () => {
 });
 
 describe('Modularity evaluation', () => {
-    it('modularity of a partition of an empty graph is 0',
-    () => {
-        const g = Graph.instantiate();
-        assert.equal(mod.evaluate(g, {}), 0);
-    });
-    it('modularity of a partition of an graph with nodes but no edges is 0',
-    () => {
-        const g = Graph.instantiate();
-        g.node('A');
-        g.node('B');
-        assert.equal(mod.evaluate(g, {}), 0);
-    });
-    it('modularity of a partition of a graph with edges and with all nodes in same community approaches 0',
-    () => {
-        const g = Graph.instantiate();
-        const partition = {};
-        for(var i=0; i<100;i++){
-            g.edge(i+'a', i+'b');
-            partition[i+'a'] = 0;
-            partition[i+'b'] = 0;
+    describe('Evaluate partitions with 0 or 1 communities', () => {
+        it('modularity of a partition of an empty graph is 0',
+        () => {
+            const g = Graph.instantiate();
+            assert.equal(mod.evaluate(g, {}), 0);
+        });
+        it('modularity of a partition of an graph with nodes but no edges is 0',
+        () => {
+            const g = Graph.instantiate();
+            g.node('A');
+            g.node('B');
+            assert.equal(mod.evaluate(g, {}), 0);
+        });
+        it(`modularity of a partition of a graph with edges and with all nodes
+            in same community approaches 0`,
+        () => {
+            const g = Graph.instantiate();
+            const partition = {};
+            for(var i=0; i<100;i++){
+                g.edge(i+'a', i+'b');
+                partition[i+'a'] = 0;
+                partition[i+'b'] = 0;
 
-        }
-        const modularity = mod.evaluate(g, partition);
-        assert.ok( modularity >= 0 && modularity <= 0.01);
+            }
+            const modularity = mod.evaluate(g, partition);
+            assert.ok( modularity >= 0 && modularity <= 0.01);
+        });
     });
-    it('modularity of a partition with multiple communities, where all edges are intra-community, approaches 1',
-    () => {
-        const g = Graph.instantiate();
-        const partition = {};
-        for(var i=0; i<100;i++){
-            g.edge(i+'a', i+'b');
-            partition[i+'a'] = i;
-            partition[i+'b'] = i;
+    describe('Evaluate partitions with multiple communities', () => {
+        it('Modularity approaches 1 when all edges are intra-community',
+        () => {
+            const g = Graph.instantiate();
+            const partition = {};
+            for(var i=0; i<100;i++){
+                g.edge(i+'a', i+'b');
+                partition[i+'a'] = i;
+                partition[i+'b'] = i;
 
-        }
-        const modularity = mod.evaluate(g, partition);
-        assert.ok( modularity > 0.98 && modularity <= 1);
-    });
-    it('modularity of a partition with multiple communities where half of edges (with consistent weights) are intra-community, approaches 0.5',
-    () => {
-        const g = Graph.instantiate();
-        const partition = {};
-        for(var i=0; i<200;i++){
-            g.edge(i+'a', i+'b');
-            partition[i+'a'] = i;
-            partition[i+'b'] = i%2? i : i - 1;
-        }
-        const modularity = mod.evaluate(g, partition);
-        assert.ok( modularity > 0.48 && modularity <= 0.5);
-    });
-    //TODO: clarify case
-    it('modularity of a partition with multiple communities, where half of weight of the edges is intra-community, equal number of nodes, approaches 0.5',
-    () => {
-        const g = Graph.instantiate();
-        const partition = {};
-        //Generate 100 edges of weight 2.
-        //Generate 100 edges of weight 4.
-        //Half of weight 2 edges are intra-community.
-        //Half of weight 4 edges are intra-community.
-        for(var i=0; i<200;i++){
-            const weight = i < 50? 2 : 4;
-            g.edge(i+'a', i+'b', weight);
-            partition[i+'a'] = i;
-            partition[i+'b'] = i%2? i : i - 1;
-        }
-        const modularity = mod.evaluate(g, partition);
-        assert.ok( modularity > .48 && modularity <= 0.5);
-    });
-    //TODO: clarify case
-    it('modularity of a partition with multiple communities - where half of weight of the edges is intra-community, unequal numbers of nodes, approaches 0.5',
-    () => {
-        const g = Graph.instantiate();
-        const partition = {};
-        for(var i=0; i<200;i++){
-            g.edge(i+'a', i+'b', 1);
-            partition[i+'a'] = i;
-            partition[i+'b'] = i-1;
-        }
-        for(var i=0; i<100;i++){
-            g.edge(i+'A', i+'B', 2);
-            partition[i+'A'] = i*100;
-            partition[i+'B'] = i*100;
-        }
-        const modularity = mod.evaluate(g, partition);
-        assert.ok( modularity > .48 && modularity <= 0.5);
-    });
-    it('modularity of a partition with multiple communities, edges, and no intra-community edges is less than 0',
-    () => {
-        const g = Graph.instantiate();
-        g.edge('a','b');
-        g.edge('a','c');
-        g.edge('c','b');
-        g.edge('a','d');
-        g.edge('a','e');
+            }
+            const modularity = mod.evaluate(g, partition);
+            assert.ok( modularity > 0.98 && modularity <= 1);
+        });
+        it(`Modularity of an unweighted network approaches 0.5 when
+            half of edges are intra-community`,
+        () => {
+            const g = Graph.instantiate();
+            const partition = {};
+            for(var i=0; i<200;i++){
+                g.edge(i+'a', i+'b');
+                partition[i+'a'] = i;
+                partition[i+'b'] = i%2? i : i - 1;
+            }
+            const modularity = mod.evaluate(g, partition);
+            assert.ok( modularity > 0.48 && modularity <= 0.5);
+        });
+        it(`Modularity of an weighted network approaches 0.5 when half of edge
+            weight is intra-community (with intra- and inner- community edges
+                distributed among even number of nodes)`,
+        () => {
+            const g = Graph.instantiate();
+            const partition = {};
+            //Generate 100 edges of weight 2; generate 100 edges of weight 4.
+            //Half of weight 2 edges are intra-community; half of weight 4 edges
+            // are intra-community.
+            for(var i=0; i<200;i++){
+                const weight = i < 50? 2 : 4;
+                g.edge(i+'a', i+'b', weight);
+                partition[i+'a'] = i;
+                partition[i+'b'] = i%2? i : i - 1;
+            }
+            const modularity = mod.evaluate(g, partition);
+            assert.ok( modularity > .48 && modularity <= 0.5);
+        });
+        it(`Modularity of an weighted network approaches 0.5 when half of edge
+            weight is intra-community (with intra- and inner- community edges
+                distributed among unequal number of nodes)`,
+        () => {
+            const g = Graph.instantiate();
+            const partition = {};
+            //Generate 200 nodes of weight 1 without intra-community edges
+            for(var i=0; i<200;i++){
+                g.edge(i+'a', i+'b', 1);
+                partition[i+'a'] = i;
+                partition[i+'b'] = i-1;
+            }
+            //Generate 100 nodes of weight 2 with intra-community edges.
+            for(var i=0; i<100;i++){
+                g.edge(i+'A', i+'B', 2);
+                partition[i+'A'] = i*100;
+                partition[i+'B'] = i*100;
+            }
+            const modularity = mod.evaluate(g, partition);
+            assert.ok( modularity > .48 && modularity <= 0.5);
+        });
+        it(`Modularity is less than 0 when network has fewer intra-community
+            edges than predicted by null model`,
+        () => {
+            const g = Graph.instantiate();
+            g.edge('a','b');
+            g.edge('a','c');
+            g.edge('c','b');
+            g.edge('a','d');
+            g.edge('a','e');
 
-        g.edge('A','B');
-        g.edge('A','C');
-        g.edge('C','B');
-        g.edge('A','D');
-        g.edge('A','E');
-
-
-        const partition = { 'a': 0, 'b': 1, 'c': 2, 'd': 1, 'e': 1,
-            'A': 0, 'B':1, 'C': 2, 'D': 1, 'E': 1}
-        const modularity = mod.evaluate(g, partition);
-        assert.ok( modularity < 0 );
+            g.edge('A','B');
+            g.edge('A','C');
+            g.edge('C','B');
+            g.edge('A','D');
+            g.edge('A','E');
+            const partition = { 'a': 0, 'b': 1, 'c': 2, 'd': 1, 'e': 1,
+                'A': 0, 'B':1, 'C': 2, 'D': 1, 'E': 1}
+            const modularity = mod.evaluate(g, partition);
+            assert.ok( modularity < 0 );
+        });
     });
+
 });
-
-//TODO: test adding ane dge of weight 0
