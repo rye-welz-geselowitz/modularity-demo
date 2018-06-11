@@ -24,8 +24,15 @@ function accumulateIntraCommunityWeightForNode(intraCommunityWeightForNode, i, j
         const A_ij = graph.edgeWeight(i,j);
         const k_i = graph.degree(i);
         const k_j = graph.degree(j);
-        const P_ij =  k_i * k_j /  m;
+        const P_ij =  k_i * k_j / (2 * m);
         const nodePairContribution = A_ij - P_ij;
+        // console.log('\n',i,j)
+        // console.log('A_ij', A_ij)
+        // console.log('k_i',k_i)
+        // console.log('k_j',k_j)
+        // console.log('P_ij', P_ij)
+        // console.log('nodePairContribution',nodePairContribution)
+
         return intraCommunityWeightForNode + nodePairContribution;
     }
     return intraCommunityWeightForNode;

@@ -1,5 +1,5 @@
-const Graph = require('../graph');
-const mod = require('../modularity')
+const Graph = require('../src/graph');
+const mod = require('../src/modularity')
 const assert = require('assert');
 
 describe('Graph data structure', () => {
@@ -203,15 +203,18 @@ describe('Modularity evaluation', () => {
         g.addNode('B');
         assert.equal(mod.evaluate(g, {}), 0);
     });
-    it('modularity of a partition of a graph with edges and with all nodes in same community is 0',
+    it('modularity of a partition of a graph with edges and with all nodes in same community approaches 0',
     () => {
         const g = Graph.Graph();
-        g.addNode('a');
-        g.addEdge('b', 'c')
-        const community1 = 'C1';
-        const partition = { 'a': community1, 'b': community1, 'c': community1};
+        const partition = {};
+        for(var i=0; i<100;i++){
+            g.addEdge(i+'a', i+'b');
+            partition[i+'a'] = 0;
+            partition[i+'b'] = 0;
+
+        }
         const modularity = mod.evaluate(g, partition);
-        assert.equal(modularity, 0);
+        assert.ok( modularity >= 0 && modularity <= 0.01);
     });
     it('modularity of a partition with multiple communities, where all edges are intra-community, approaches 1',
     () => {

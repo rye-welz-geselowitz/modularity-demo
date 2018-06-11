@@ -3,13 +3,19 @@
   "version": "1.0.0",
   "main": "graph.js",
   "scripts": {
-    "test": "mocha test/index.js"
+    "test": "mocha test/index.js",
+    "start": "browserify viz/main.js -o bundle.js -v && http-server",
+    "dev": "watchify viz/main.js -o viz/bundle.js "
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "mocha": "^5.2.0"
+    "mocha": "^5.2.0",
+    "watchify": "^3.11.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "browserify": "^16.2.2",
+    "http-server": "^0.11.1"
+  },
   "description": ""
 }

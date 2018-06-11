@@ -1,0 +1,26 @@
+body{
+    background: black;
+}
+.link{
+    stroke: gray;
+}
+
+.label{
+    font-size: 10px;
+    color: black;
+}
+.c0{
+    fill: pink;
+}
+.c1{
+    fill: lavender;
+}
+.c2{
+    fill: lightgreen;
+}
+h1,h2{
+    color: white;
+}
+svg{
+    border: solid 1px gray;
+}
