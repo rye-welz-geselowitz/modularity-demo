@@ -12,10 +12,11 @@ This code sample includes:
 * a [function](src/modularity.js) that evaluates the partition of such a graph
 * a [D3 demo](viz/) that allows user to re-assign nodes in a random visualized network and observe how modularity score changes
 
-## Try Out The Demo
+## Try Demo
 * Clone repo
+* `cd modularity-demo`
 * `npm install`
-* `npm run start`
+* `npm start`
 
 ## To-dos
 * Increase test coverage (add tests for `symmetric-lookup.js`)
