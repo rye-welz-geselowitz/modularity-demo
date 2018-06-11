@@ -20,7 +20,7 @@ run(formattedGraphData);
 
 /////////////////////////////////////////////////
 function displayModularity(modularity){
-    document.getElementById('score').innerHTML = Math.floor(modularity * 1000) /1000 ;
+    document.getElementById('score').innerHTML = Math.floor(modularity * 100) /100 ;
 }
 function run(graph) {
     const link = g.append("g")
