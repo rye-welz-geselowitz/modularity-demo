@@ -1,88 +1,58 @@
-/* Implementation of undirected, weighted graph*/
-function ConstructGraph(){
-    //Instantiate empty nodes & edges
-    this._nodes = new Set();
-    this._edges = {}
-    //Add nodes and edges
-    this.addNode = (node) => {
-        this._nodes.add(node);
-    }
-    this.addEdge = (node1, node2, weight = 1) => {
-        [node1, node2].forEach( (node) => {
-            if(!this.hasNode(node)) { this.addNode(node)}
-        })
-        if(!(node1 in this._edges)){
-            this._edges[node1] = {};
-        }
-        this._edges[node1][node2] = weight;
-        if(!(node2 in this._edges)){
-            this._edges[node2] = {};
-        }
-        this._edges[node2][node1] = weight;
-    }
-    // Remove nodes & edges
-    this.removeEdge = (node1, node2) => {
-        if(this.hasEdge(node1, node2)){
-            delete this._edges[node1][node2];
-            delete this._edges[node2][node1];
-        }
-    }
-    this.removeNode = (node) => {
-        this.neighbors(node).forEach( (neighbor)=> {
-            this.removeEdge(node, neighbor);
-        })
-        this._nodes.delete(node);
-    }
-    //Query nodes & edges
-    this.hasNode = (node) => this._nodes.has(node)
-    this.hasEdge = (node1, node2) => {
-        return node1 in this._edges && node2 in this._edges[node1];
-    }
-    this.nodes = () => sorted([...this._nodes]);
-    this.edges = () => {
-        const alreadyAddedEdges = {};
-        return Object.keys(this._edges).reduce((acc, node1) => {
-            const edgeTuples =  Object.keys(this._edges[node1]).reduce((acc, node2)=> {
-                    const [key1, key2] = sorted([node1, node2])
-                    if(alreadyAddedEdges[key1] && alreadyAddedEdges[key1][key2]){
-                        return acc;
-                    }
-                    if(!alreadyAddedEdges[key1]){
-                        alreadyAddedEdges[key1] = {};
-                    }
-                    alreadyAddedEdges[key1][key2] = true;
-                    return acc.concat([[key1, key2]])
-            }, [])
-            return acc.concat(edgeTuples);
-        }, []);
-    }
-    this.edgeWeight = (node1, node2) => {
-        return this.hasEdge(node1, node2)? this._edges[node1][node2] : 0;
-    }
-    this.neighbors = (node) => {
-        return Object.keys(this._edges[node] || []);
-    }
-    this.weight = () => {
-        return (this.edges().reduce( (acc, edgeTuple) => {
-            return acc + this.edgeWeight(edgeTuple[0], edgeTuple[1]);
-        }, 0));
-    }
-    this.degree = (node) => {
-        return this.neighbors(node).reduce( (acc, neighbor)=> {
-            return acc + this.edgeWeight(node, neighbor);
-        }, 0)
-    }
-}
+/* Interface for an undirected, weighted graph.*/
 
-function sorted(list){
-    return list.slice().sort();
-}
+const SymmetricLookup = require('./symmetric-lookup');
 
 function Graph(){
-    return new ConstructGraph();
+    this._nodes = new Set();
+    this._edges = SymmetricLookup.instantiate();
 }
 
+//Specify nodes & edges
+Graph.prototype.node = function(node){
+    this._nodes.add(node);
+}
+Graph.prototype.edge = function(node1, node2, weight = 1){
+    if(weight===0){ this.removeEdge(node1, node2);}
+    [node1, node2].forEach( (node) => {
+        if(!this.hasNode(node)) { this.node(node)}
+    });
+    this._edges.add(node1, node2, weight);
+}
+
+//Remove nodes & edges
+Graph.prototype.removeEdge = function(node1, node2){
+    this._edges.remove(node1, node2)
+}
+Graph.prototype.removeNode = function(node){
+    this.neighbors(node).forEach( (neighbor)=> {
+        this.removeEdge(node, neighbor);
+    })
+    this._nodes.delete(node);
+}
+
+// Query graph
+Graph.prototype.hasNode = function(node){ return this._nodes.has(node) };
+Graph.prototype.hasEdge = function(node1, node2){
+    return this._edges.has(node1, node2)
+};
+Graph.prototype.nodes = function(){ return [...this._nodes].slice().sort() };
+Graph.prototype.edges = function(){ return this._edges.keys() };
+Graph.prototype.edgeWeight = function(node1, node2){
+    return this._edges.get(node1, node2, 0)};
+Graph.prototype.neighbors = function(node){
+    return this._edges.adjacent(node)
+}
+Graph.prototype.weight = function(){
+    return (this.edges().reduce( (acc, edgeTuple) => {
+        return acc + this.edgeWeight(edgeTuple[0], edgeTuple[1]);
+    }, 0));
+}
+Graph.prototype.degree = function(node){
+    return this.neighbors(node).reduce( (acc, neighbor)=> {
+        return acc + this.edgeWeight(node, neighbor);
+    }, 0)
+}
 
 module.exports = {
-    Graph: Graph
+    instantiate: () => new Graph()
 }

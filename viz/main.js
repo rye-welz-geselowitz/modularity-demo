@@ -2,37 +2,35 @@ const mod = require('../src/modularity');
 const gen = require('./generate-network');
 const d3 = require('./d3.min.js')
 
-const graph = gen.generateGraph();
-const formattedGraphData = formatGraphData(graph);
-const partition = gen.generateInitialPartition(graph);
-let modularity = mod.evaluate(graph, partition);
-displayModularity(modularity);
+// Generate random network
+const network = gen.generateNetwork();
+const formattedNetworkData = formatNetworkData(network);
+const partition = gen.generateInitialPartition(network);
 
-const svg = d3.select("svg"),
-    width = +svg.attr("width"),
+// Draw visualization
+const svg = d3.select("svg"), width = +svg.attr("width"),
     height = +svg.attr("height");
 const g = svg.append("g");
+displayModularityBox();
+displayModularity(mod.evaluate(network, partition));
 const simulation = generateSimulation(width, height);
 const nCommunities = 3;
 
+run(formattedNetworkData);
 
-run(formattedGraphData);
+/////////////HELPERS//////////////////
 
-/////////////////////////////////////////////////
-function displayModularity(modularity){
-    document.getElementById('score').innerHTML = Math.floor(modularity * 100) /100 ;
-}
-function run(graph) {
+function run(network) {
     const link = g.append("g")
         .attr("class", "link")
         .selectAll("line")
-        .data(graph.links)
+        .data(network.links)
         .enter().append("line");
 
     const node = g.append("g")
         .attr("class", "node")
         .selectAll("circle")
-        .data(graph.nodes)
+        .data(network.nodes)
         .enter().append("circle")
         .attr("r", 2)
         .call(d3.drag()
@@ -40,20 +38,13 @@ function run(graph) {
         .on("drag", dragged)
         .on("end", dragended));
 
-    const label = g.append("g")
-        .attr("class", "labels")
-        .selectAll("text")
-        .data(graph.nodes)
-        .enter().append("text")
-        .attr("class", "label")
-        .text((d) => d.id);
-
     simulation
-      .nodes(graph.nodes)
-      .on("tick", ticked.bind(this, link, node, label));
+      .nodes(network.nodes)
+      .on("tick", ticked.bind(this, link, node));
 
     simulation.force("link")
-        .links(graph.links);
+        .links(network.links);
+
     // Handle zoom
     const zoomHandler = d3.zoom()
         .on("zoom", () => {
@@ -63,8 +54,7 @@ function run(graph) {
 
 }
 
-
-function ticked(link, node, label) {
+function ticked(link, node) {
     link
         .attr("x1", (d)=> d.source.x)
         .attr("y1",  (d)=> d.source.y)
@@ -77,16 +67,8 @@ function ticked(link, node, label) {
          .attr("cy", (d) =>  d.y-3)
          .on("click", updateCommunity)
          .attr("class", (d)=> getCommunityClass(partition[d.id]));
-
-    label
-            .attr("x", function(d) { return d.x; })
-            .attr("y", function (d) { return d.y; })
-            .attr("class", "label")
 }
 
-function getCommunityClass(c){
-    return Array.from({length: nCommunities}, (_, i) => 'c'+i)[c] || 'c1';
-}
 
 function generateSimulation(width, height){
     return d3.forceSimulation()
@@ -119,15 +101,53 @@ function dragended(d) {
 function updateCommunity(node){
   partition[node.id] =
     partition[node.id] === nCommunities? 0 : partition[node.id] + 1;
-  modularity = mod.evaluate(graph, partition);
+  modularity = mod.evaluate(network, partition);
   displayModularity(modularity);
 
 }
 
-function formatGraphData(graph){
+function formatNetworkData(network){
     return {
-      nodes: graph.nodes().reduce((acc, node)=> acc.concat({id: node}), []),
-      links: graph.edges()
+      nodes: network.nodes().reduce((acc, node)=> acc.concat({id: node}), []),
+      links: network.edges()
         .reduce((acc, edge)=> acc.concat({source: edge[0], target: edge[1]}), [])
     }
+}
+
+function getCommunityClass(c){
+    return Array.from({length: nCommunities}, (_, i) => 'c'+i)[c] || 'c1';
+}
+
+function displayModularityBox(){
+    const rWidth = 80, rHeight = 50, rMargin = 10;
+    svg
+        .append("rect")
+        .attr("x", rMargin)
+        .attr("y", height - (rHeight+rMargin))
+        .attr("width", rWidth)
+        .attr("height", rHeight)
+        .style('fill', 'black')
+        .style('opacity', .9)
+    svg
+        .append("text")
+        .attr("x", 50)
+        .attr("y", height - 50)
+        .attr("text-anchor", "middle")
+        .style("font-size", "14px")
+        .style('fill', 'white')
+        .text("modularity = ");
+}
+
+function displayModularity(modularity){
+    svg.select('#modularity').remove();
+    svg
+        .append("text")
+        .attr("x", 50)
+        .attr("y", height - 20)
+        .attr('id', 'modularity')
+        .attr("text-anchor", "middle")
+        .style("font-size", "36px")
+        .style('fill', 'white')
+        .text(Math.floor(modularity * 100) / 100);
+
 }
